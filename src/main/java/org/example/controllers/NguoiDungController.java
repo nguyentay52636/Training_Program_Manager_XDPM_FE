@@ -58,7 +58,7 @@ public class NguoiDungController {
             @PathVariable("id") int id,
             @RequestBody NguoiDung nguoiDung) {
         try {
-            nguoiDung.setIdTaiKhoan(id);
+            nguoiDung.setId(id);
             NguoiDung updatedUser = nguoiDungServices.capNhatThongTin(nguoiDung);
             return ResponseEntity.ok(updatedUser);
         } catch (RuntimeException e) {
@@ -74,8 +74,8 @@ public class NguoiDungController {
         try {
             String matKhauCu = passwords.get("matKhauCu");
             String matKhauMoi = passwords.get("matKhauMoi");
-            nguoiDungServices.doiMatKhau(id, matKhauCu, matKhauMoi);
-            return ResponseEntity.ok(Map.of("message", "Đổi mật khẩu thành công"));
+            NguoiDung updatedUser = nguoiDungServices.doiMatKhau(id, matKhauCu, matKhauMoi);
+            return ResponseEntity.ok(updatedUser);
         } catch (RuntimeException e) {
             return ResponseEntity.status(400).body(Map.of("error", e.getMessage()));
         }
@@ -99,9 +99,37 @@ public class NguoiDungController {
         return ResponseEntity.ok(users);
     }
 
+    // Thêm tài khoản mới (yêu cầu quyền admin)
+    @PostMapping("/admin/them")
+    public ResponseEntity<?> themTaiKhoan(
+            @RequestBody NguoiDung nguoiDung,
+            @RequestHeader("Admin-Id") int adminId) {
+        try {
+            NguoiDung newUser = nguoiDungServices.themTaiKhoan(nguoiDung, adminId);
+            return ResponseEntity.ok(newUser);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(400).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    // Cập nhật role người dùng (yêu cầu quyền admin)
+    @PutMapping("/{id}/role")
+    public ResponseEntity<?> capNhatRole(
+            @PathVariable("id") int id,
+            @RequestParam int newRole,
+            @RequestHeader("Admin-Id") int adminId) {
+        try {
+            NguoiDung updatedUser = nguoiDungServices.capNhatRole(id, newRole, adminId);
+            return ResponseEntity.ok(updatedUser);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(400).body(Map.of("error", e.getMessage()));
+        }
+    }
+
     // Tìm kiếm người dùng
     @GetMapping("/timkiem")
-    public ResponseEntity<List<NguoiDung>> timKiemNguoiDung(@RequestParam(required = false) String keyword) {
+    public ResponseEntity<List<NguoiDung>> timKiemNguoiDung(
+            @RequestParam(required = false) String keyword) {
         List<NguoiDung> users = nguoiDungServices.timKiem(keyword);
         return ResponseEntity.ok(users);
     }
